@@ -1,9 +1,9 @@
 package org.example.recipes.dao;
 
 import org.example.recipes.model.Recipe;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
+import org.springframework.data.repository.CrudRepository;
 
-@Repository("recipeRepository")
-public interface RecipeRepository extends JpaRepository<Recipe, Long> {
+@EnableScan
+public interface RecipeRepository extends CrudRepository<Recipe, String> {
 }

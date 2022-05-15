@@ -2,6 +2,8 @@
 
 Example project implementing an API that allows to create/view/manage your recipes!
 
+## Description documentation
+
 ### Requirements
 
 1. REST application to manage (CRUD) recipe objects
@@ -15,7 +17,8 @@ Example project implementing an API that allows to create/view/manage your recip
 Decisions & assumptions:
 
 1. Stateless service implementation, containerized and horizontally scalable across AZs & regions
-2. Persistent data-store capable of handling high-volume write operations
+2. Persistent data-store capable of handling high-volume read operations
+    1. Opted for a NoSQL database (DynamoDB). The main reason for this choice is that the recipe entity data sits in a single table, the ingredients list is also made up of objets that are _"unique-enough"_ per recipe due to name-amount combination. With this in mind a schema-less data-store meets the requirements and is flexible for future extensions to the data-model.
 3. Data model
    ````
    {
@@ -42,8 +45,46 @@ Decisions & assumptions:
    3. Data normalized this way would not benefit from storage savings, the amounts & units are close to unique per recipe. 
 
 4. Container image for the application is created during application build (separate profile that can be enabled). Since the service is stateless it can be easily scaled as long as the data-store is scaled with it to support all connections from all service instances.
-5. Security layer can be implemented at the service side ie using Spring-Security.
+5. Security layer currently implemented at the service side using Spring-Security.
    1. However it is a good practice to push some of these concerns out of the service implementation and into an upstream layer such as API Gateway or a side-car proxy, components that are more capable of handling authentication, authorization and throttling/quota for incoming requests, thus limiting the amount of traffic that gets to be handled by the service.
+
+### Deployment
+
+1. Local / development deployment using docker-compose allows for quickly running the application and dependencies.
+    ````
+    # start containers
+    docker-compose up
+
+    # initialize DB (only required once, data is persisted on disk between runs at: ./docker/dynamodb/*.db)
+    mvn clean test -Dtest=org.example.recipes.test.integration.DatabaseIni
+
+    # execute integration tests
+    mvn clean test -Dtest=org.example.recipe.test.integration.RecipeControllerTest
+    ````
+
+### Security
+
+1. Endpoints protection, authentication (user or client based) & authorization
+   1. TODO: Request throttling to protect against malicious or compromised clients
+   2. TODO: Client authentication (API key?, cryptographically signed tokens?)
+
+### Next steps:
+
+1. Scaling
+2. Security
+   1. Authorization - which API is the client allowed to call & with what parameters, ie creating-recipes should require editor-access
+   2. Application scanning (dependencies / BOM)
+      1. Scanning code for bugs
+      2. Scanning dependencies for known vulnerabilities in used versions
+      3. Scanning container-images for known OS vulnerabilities, elevated application rights etc
+      4. Scanning container-platform/application at runtime for:
+          1. Permissions assigned to application in its sandbox, ie can it access more than required services such as the DB.
+          2. Scanning HTTP traffic coming to/out of the application ie via ingress/egress gateway, making sure it is not going to known addresses.
+3. Backups
+4. Monitoring & logs
+5. Analytics
+
+## Use documentation
 
 ### Prerequisites
 
@@ -54,13 +95,14 @@ Decisions & assumptions:
 ### Build
 
 ````
-mvn clean install
+mvn clean install -Pdocker
 ````
+> Profile _docker_ during build is optional.
 
 ### Run
 
 ````
-mvn spring-boot:run
+docker-compose up
 ````
 
 Access: [/api-docs](http://localhost:8080/api-docs) or [/swagger-ui](http://localhost:8080/swagger-ui/index.html) endpoints for documentation.
@@ -68,7 +110,16 @@ Access: [/api-docs](http://localhost:8080/api-docs) or [/swagger-ui](http://loca
 ### Test
 
 ````
-mvn clean test
+mvn clean test -Dtest=org.example.recipes.test.integration.RecipeControllerTest
+
+...
+recipe_service_1  | 2022-05-15 15:21:13.406  INFO 1 --- [           main] org.example.recipes.RecipesApplication   : Started RecipesApplication in 3.089 seconds (JVM running for 3.467)
+recipe_service_1  | 2022-05-15 15:24:07.021  INFO 1 --- [nio-8080-exec-2] o.e.recipes.controller.RecipeController  : Created recipe with id: a12cb443-6b42-44f4-b975-c24511421ac2
+recipe_service_1  | 2022-05-15 15:24:07.190  INFO 1 --- [nio-8080-exec-4] o.e.recipes.controller.RecipeController  : Updated recipe with id: a12cb443-6b42-44f4-b975-c24511421ac2
+recipe_service_1  | 2022-05-15 15:24:07.342  INFO 1 --- [nio-8080-exec-5] o.e.recipes.controller.RecipeController  : Removed recipe with id: a12cb443-6b42-44f4-b975-c24511421ac2
 ````
 
 ## References
+
+- DB/PostgreSQL: https://hub.docker.com/_/postgres/
+- DB/DynamoDB: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.DownloadingAndRunning.html

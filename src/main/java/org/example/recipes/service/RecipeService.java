@@ -9,6 +9,8 @@ import org.webjars.NotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 public class RecipeService {
@@ -21,6 +23,7 @@ public class RecipeService {
     }
 
     public Recipe createRecipe(Recipe recipe) {
+        recipe.setId(null);
         recipe.setCreated(LocalDateTime.now());
         recipe.setUpdated(LocalDateTime.now());
         return recipeRepository.save(recipe);
@@ -35,19 +38,31 @@ public class RecipeService {
             Recipe updated = recipeRepository.save(recipe);
             return updated;
         } else {
-            throw new NotFoundException(String.format("Recipe %d not found!", recipe.getId()));
+            throw new NotFoundException(String.format("Recipe %s not found!", recipe.getId()));
         }
     }
 
-    public void deleteRecipe(long id) {
-        recipeRepository.deleteById(id);
+    public void deleteRecipe(String id) {
+        Optional<Recipe> recipe = recipeRepository.findById(id);
+        if (recipe.isPresent()) {
+            recipeRepository.deleteById(id);
+        } else {
+            throw new NotFoundException(String.format("Recipe %s not found!", id));
+        }
     }
 
-    public Recipe findById(long id) {
-        return recipeRepository.findById(id).get();
+    public Recipe getById(String id) {
+        Optional<Recipe> recipe = recipeRepository.findById(id);
+        if (recipe.isPresent()) {
+            return recipe.get();
+        } else {
+            throw new NotFoundException(String.format("Recipe %s not found!", id));
+        }
     }
 
-    public List<Recipe> findAll() {
-        return recipeRepository.findAll();
+    public List<Recipe> getAll() {
+        return StreamSupport
+                .stream(recipeRepository.findAll().spliterator(), false)
+                .collect(Collectors.toList());
     }
 }

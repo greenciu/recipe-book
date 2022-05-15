@@ -40,15 +40,19 @@ public class RecipeController {
                 .ok(updatedRecipe);
     }
 
-    @DeleteMapping(path = "/api/recipe")
-    public void deleteRecipe(@RequestParam long id) {
+    @DeleteMapping(path = "/api/recipe/{id}")
+    public void deleteRecipe(@PathVariable String id) {
         recipeService.deleteRecipe(id);
         log.info("Removed recipe with id: {}", id);
     }
 
     @GetMapping(path = "/api/recipe")
     public List<Recipe> getRecipes() {
-        return recipeService.findAll();
+        return recipeService.getAll();
     }
 
+    @GetMapping(path = "/api/recipe/{id}")
+    public Recipe getRecipe(@PathVariable String id) {
+        return recipeService.getById(id);
+    }
 }

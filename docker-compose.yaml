@@ -1,0 +1,32 @@
+version: '3.7'
+services:
+  database:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    image: "amazon/dynamodb-local:latest"
+    container_name: dynamodb
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+  recipe_service:
+    image: example/recipes:latest
+    depends_on:
+      - database
+    ports:
+      # JVM DEBUG PORT
+      - '5005:5005'
+      # SERVER PORT
+      - '8080:8080'
+      # ADMIN/MONITORING PORT
+      - '8081:8081'
+    environment:
+      - logging.level.org.example.recipe=INFO
+      # Security configuration overwrite at deploytime
+      - spring.security.user.password=password
+      # DB connection configuration
+      - aws.region=eu-central-1
+      - aws.dynamodb.endpoint=http://database:8000/
+      # Load credentials from vault/secrets-store
+      - AWS_ACCESS_KEY=key
+      - AWS_SECRET_KEY=key2

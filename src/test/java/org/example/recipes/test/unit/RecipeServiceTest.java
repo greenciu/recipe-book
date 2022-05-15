@@ -1,6 +1,7 @@
 package org.example.recipes.test.unit;
 
 import org.example.recipes.dao.RecipeRepository;
+import org.example.recipes.model.Ingredient;
 import org.example.recipes.model.Recipe;
 import org.example.recipes.service.RecipeService;
 import org.example.recipes.test.util.TestObjects;
@@ -44,9 +45,9 @@ public class RecipeServiceTest {
         Recipe recipe = recipeService.createRecipe(testRecipe);
         log.debug("Saved entity: {}", recipe);
         Assertions.assertNotNull(recipe);
-        Assertions.assertEquals(1L, recipe.getId());
     }
 
+    @DisplayName("Test update(recipe) when entity is missing from data-store")
     @Test
     public void givenRecipeObject_whenUpdateNonExistingRecipe_thenThrowNotFound() {
         Recipe testRecipe = TestObjects.createRecipeObject();
@@ -58,18 +59,63 @@ public class RecipeServiceTest {
         Assertions.assertEquals("Recipe 1 not found!", e.getMessage());
     }
 
+    @DisplayName("Test update(recipe)")
     @Test
     public void givenRecipeObject_whenUpdateRecipe_thenReturnUpdatedRecipeObject() {
+        Ingredient newIngredient = Ingredient.builder()
+                .name("olives")
+                .amount(150)
+                .unit(Ingredient.Unit.gram)
+                .build();
+
         Recipe testRecipe = TestObjects.createRecipeObject();
         testRecipe.setType(Recipe.Type.CARNIVORE);
-        testRecipe.getIngredients().add("olives");
+        testRecipe.getIngredients().add(newIngredient);
 
         given(recipeRepository.findById(testRecipe.getId())).willReturn(Optional.of(testRecipe));
         given(recipeRepository.save(testRecipe)).willReturn(testRecipe);
 
-        Recipe recipe = recipeService.updateRecipe(testRecipe);
+        recipeService.updateRecipe(testRecipe);
+
+        Recipe recipe = recipeService.getById(testRecipe.getId());
         log.debug("Updated entity: {}", recipe);
         Assertions.assertNotNull(recipe);
-        Assertions.assertEquals(1L, recipe.getId());
+        Assertions.assertEquals(Recipe.Type.CARNIVORE, recipe.getType());
+        Assertions.assertTrue(recipe.getIngredients().contains(newIngredient));
+    }
+
+    @DisplayName("Test getById(recipeId)")
+    @Test
+    public void givenRecipeObject_whenGetRecipe_thenReturnRecipeObject() {
+        Recipe testRecipe = TestObjects.createRecipeObject();
+        given(recipeRepository.findById("1")).willReturn(Optional.of(testRecipe));
+
+        Recipe recipe = recipeService.getById("1");
+        log.debug("Got entity: {}", recipe);
+        Assertions.assertNotNull(recipe);
+    }
+
+    @DisplayName("Test getById(recipeId) when entity is missing from data-store")
+    @Test
+    public void givenRecipeObject_whenGetRecipeWithNonExistentId_thenThrowNotFound() {
+        Recipe testRecipe = TestObjects.createRecipeObject();
+
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class, () -> {
+            recipeService.getById(testRecipe.getId());
+        });
+
+        Assertions.assertEquals("Recipe 1 not found!", e.getMessage());
+    }
+
+    @DisplayName("Test delete(recipeId)")
+    @Test
+    public void givenRecipeObject_whenDeleteRecipeWithNonExistentId_thenThrowNotFound() {
+        Recipe testRecipe = TestObjects.createRecipeObject();
+
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class, () -> {
+            recipeService.deleteRecipe(testRecipe.getId());
+        });
+
+        Assertions.assertEquals("Recipe 1 not found!", e.getMessage());
     }
 }

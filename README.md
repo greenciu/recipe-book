@@ -54,12 +54,19 @@ Decisions & assumptions:
     ````
     # start containers
     docker-compose up
+    Creating network "recipes_default" with the default driver
+    Creating dynamodb ... done
+    Creating recipes_recipe_service_1 ... done
+    Attaching to dynamodb, recipes_recipe_service_1
+    dynamodb          | Initializing DynamoDB Local with the following configuration:
+    dynamodb          | Port:	8000
+    ...
+    recipe_service_1  | 2022-05-15 15:37:46.242  INFO 1 --- [           main] org.example.recipes.RecipesApplication   : Starting RecipesApplication v0.1.0-SNAPSHOT using Java 17.0.2 on 3ce39535b0a7 with PID 1 (/home/appuser/recipes-0.1.0-SNAPSHOT-sb.jar started by appuser in /home/appuser)
+    recipe_service_1  | 2022-05-15 15:37:48.883  INFO 1 --- [           main] org.example.recipes.RecipesApplication   : Started RecipesApplication in 2.974 seconds (JVM running for 3.392)
 
+    # (SKIP, sample DB commited to repo!)
     # initialize DB (only required once, data is persisted on disk between runs at: ./docker/dynamodb/*.db)
-    mvn clean test -Dtest=org.example.recipes.test.integration.DatabaseIni
-
-    # execute integration tests
-    mvn clean test -Dtest=org.example.recipe.test.integration.RecipeControllerTest
+    mvn clean test -Dtest=org.example.recipes.test.integration.DatabaseInit
     ````
 
 ### Security

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -24,7 +25,7 @@ public class RecipeController {
     }
 
     @PostMapping(path = "/api/recipe")
-    public ResponseEntity<Recipe> createRecipe(@RequestBody Recipe recipe) {
+    public ResponseEntity<Recipe> createRecipe(@Valid @RequestBody Recipe recipe) {
         Recipe createdRecipe = recipeService.createRecipe(recipe);
         log.info("Created recipe with id: {}", createdRecipe.getId());
         return ResponseEntity
@@ -47,7 +48,7 @@ public class RecipeController {
     }
 
     @GetMapping(path = "/api/recipe")
-    public List<Recipe> getRecipes() {
+    public List<Recipe> getRecipes(@RequestParam(required = false) Recipe.Type type) {
         return recipeService.getAll();
     }
 

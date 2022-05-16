@@ -4,8 +4,10 @@ import org.example.recipes.dao.RecipeRepository;
 import org.example.recipes.model.Recipe;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import org.webjars.NotFoundException;
 
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +24,9 @@ public class RecipeService {
         this.recipeRepository = recipeRepository;
     }
 
-    public Recipe createRecipe(Recipe recipe) {
+    public Recipe createRecipe(@Valid Recipe recipe) {
+        validateRecipe(recipe);
+
         recipe.setId(null);
         recipe.setCreated(LocalDateTime.now());
         recipe.setUpdated(LocalDateTime.now());
@@ -64,5 +68,12 @@ public class RecipeService {
         return StreamSupport
                 .stream(recipeRepository.findAll().spliterator(), false)
                 .collect(Collectors.toList());
+    }
+
+    private void validateRecipe(Recipe recipe) {
+        Assert.isTrue(recipe.getType() != null, "recipe.type is required");
+        Assert.isTrue(recipe.getServings() != 0, "recipe.servings is required");
+        Assert.isTrue(recipe.getIngredients() != null, "recipe.ingredients is required");
+        Assert.isTrue(recipe.getInstructions() != null, "recipe.instructions is required");
     }
 }

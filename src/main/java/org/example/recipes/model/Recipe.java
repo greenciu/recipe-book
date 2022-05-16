@@ -14,6 +14,7 @@ import org.example.recipes.dao.converters.TypeConverter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -45,15 +46,15 @@ public class Recipe {
     private LocalDateTime updated;
 
     @DynamoDBTypeConverted(converter = TypeConverter.class)
-    @NotBlank
+    @NotNull(message = "recipe.type is required")
     private Type type;
 
-    @NotBlank
+    @NotNull(message = "recipe.services is required")
     private int servings;
 
-    @NotBlank
+    @NotNull(message = "recipe.ingredients is required")
     private List<Ingredient> ingredients;
 
-    @NotBlank
+    @NotBlank(message = "recipe.instructions is required")
     private String instructions;
 }

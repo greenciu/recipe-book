@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.example.recipes.dao.converters.UnitConverter;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @DynamoDBDocument
 @Data
@@ -23,6 +24,7 @@ public class Ingredient {
 
     @NotBlank
     private String name;
+    @NotNull
     private int amount;
     @DynamoDBTypeConverted(converter = UnitConverter.class)
     private Unit unit;

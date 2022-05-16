@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.webjars.NotFoundException;
 
+import java.text.ParseException;
 import java.util.Optional;
 
 import static org.mockito.BDDMockito.given;
@@ -45,6 +46,56 @@ public class RecipeServiceTest {
         Recipe recipe = recipeService.createRecipe(testRecipe);
         log.debug("Saved entity: {}", recipe);
         Assertions.assertNotNull(recipe);
+    }
+
+    @DisplayName("Test save(recipe) with incomplete type")
+    @Test
+    public void givenIncompleteTypeInRecipeObject_whenSaveRecipe_thenThrowInvalid() {
+        Recipe testRecipe = Recipe.builder().build();
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            recipeService.createRecipe(testRecipe);
+        });
+
+        Assertions.assertEquals("recipe.type is required", e.getMessage());
+    }
+
+    @DisplayName("Test save(recipe) with incomplete servings")
+    @Test
+    public void givenIncompleteServingsInRecipeObject_whenSaveRecipe_thenThrowInvalid() {
+        Recipe testRecipe = Recipe.builder().type(Recipe.Type.VEGAN).build();
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            recipeService.createRecipe(testRecipe);
+        });
+
+        Assertions.assertEquals("recipe.servings is required", e.getMessage());
+    }
+
+    @DisplayName("Test save(recipe) with incomplete ingredients")
+    @Test
+    public void givenIncompleteIngredientsInRecipeObject_whenSaveRecipe_thenThrowInvalid() {
+        Recipe testRecipe = TestObjects.createRecipeObject();
+        testRecipe.setIngredients(null);
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            recipeService.createRecipe(testRecipe);
+        });
+
+        Assertions.assertEquals("recipe.ingredients is required", e.getMessage());
+    }
+
+    @DisplayName("Test save(recipe) with incomplete instructions")
+    @Test
+    public void givenIncompleteInstructionsInRecipeObject_whenSaveRecipe_thenThrowInvalid() {
+        Recipe testRecipe = TestObjects.createRecipeObject();
+        testRecipe.setInstructions(null);
+
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            recipeService.createRecipe(testRecipe);
+        });
+
+        Assertions.assertEquals("recipe.instructions is required", e.getMessage());
     }
 
     @DisplayName("Test update(recipe) when entity is missing from data-store")
@@ -86,7 +137,7 @@ public class RecipeServiceTest {
 
     @DisplayName("Test getById(recipeId)")
     @Test
-    public void givenRecipeObject_whenGetRecipe_thenReturnRecipeObject() {
+    public void givenRecipeObject_whenGetRecipe_thenReturnRecipeObject() throws ParseException {
         Recipe testRecipe = TestObjects.createRecipeObject();
         given(recipeRepository.findById("1")).willReturn(Optional.of(testRecipe));
 
